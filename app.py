@@ -156,7 +156,6 @@ if disease_option == "Indian Liver Patient":
         **Model Type:** Random Forest Classifier  
         **Training Accuracy:** 72.65%  
         **Features Used:** Age, Gender, Bilirubin levels, Liver enzymes, Protein levels  
-        **Note:** This is a predictive model and should not replace professional medical advice.
         """)
 
 elif disease_option == "Kidney Disease":
