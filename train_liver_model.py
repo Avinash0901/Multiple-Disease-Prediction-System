@@ -1,4 +1,4 @@
-# train_kidney_model.py
+# train_liver_model.py
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -10,12 +10,12 @@ import os
 import warnings
 warnings.filterwarnings('ignore')
 
-def train_kidney_model():
+def train_liver_model():
     # Create models directory if it doesn't exist
     os.makedirs('models', exist_ok=True)
     
-    # Load the dataset
-    df = pd.read_csv(r'D:\GUVI-Project\project 4\data\kidney_disease.csv')
+    # Load dataset
+    df = pd.read_csv(r'D:\GUVI-Project\project 4\data\indian_liver_patient.csv')
     
     # Display basic info
     print("Dataset Shape:", df.shape)
@@ -30,26 +30,31 @@ def train_kidney_model():
     for col in df.select_dtypes(include=[object]).columns:
         df[col].fillna(df[col].mode()[0], inplace=True)
     
-    # Convert categorical variables (except target)
+    # Encode categorical variables (except target)
     le_dict = {}
-    target_col = 'classification'
+    target_col = 'Dataset'  # 1 = liver disease, 2 = no liver disease
     for col in df.select_dtypes(include=[object]).columns:
         if col != target_col:
             le = LabelEncoder()
             df[col] = le.fit_transform(df[col])
-            le_dict[col] = le  # Save encoder
+            le_dict[col] = le  # save encoder
     
     # Define features and target
-    X = df.drop(target_col, axis=1)
-    y = df[target_col].str.strip().str.lower()  # Remove spaces & lowercase
-    y = y.map({'ckd': 1, 'notckd': 0})
+    if 'Gender' in df.columns:
+        # Encode Gender to numeric
+        df['Gender'] = df['Gender'].map({'Male':1, 'Female':0})
+    
+    X = df.drop([target_col], axis=1)
+    y = df[target_col].map({1:1, 2:0})  # Liver disease = 1, No disease = 0
     
     # Remove rows with NaN target (if any)
     X = X[~y.isna()]
     y = y[~y.isna()]
     
     # Split the data
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42, stratify=y
+    )
     
     # Scale the features
     scaler = StandardScaler()
@@ -72,16 +77,14 @@ def train_kidney_model():
     print(confusion_matrix(y_test, y_pred))
     
     # Save the model, scaler, and encoders
-    model_path = r'D:\GUVI-Project\project 4\models\kidney_model.pkl'
-    scaler_path = r'D:\GUVI-Project\project 4\models\kidney_scaler.pkl'
-    encoder_path = r'D:\GUVI-Project\project 4\models\kidney_encoders.pkl'
+    model_path = r'D:\GUVI-Project\project 4\models\liver_model.pkl'
+    scaler_path = r'D:\GUVI-Project\project 4\models\liver_scaler.pkl'
+    encoder_path = r'D:\GUVI-Project\project 4\models\liver_encoder.pkl'
     
     with open(model_path, 'wb') as f:
         pickle.dump(model, f)
-    
     with open(scaler_path, 'wb') as f:
         pickle.dump(scaler, f)
-    
     with open(encoder_path, 'wb') as f:
         pickle.dump(le_dict, f)
     
@@ -93,4 +96,4 @@ def train_kidney_model():
     return model, scaler, le_dict, accuracy
 
 if __name__ == "__main__":
-    train_kidney_model()
+    train_liver_model()
